@@ -1,76 +1,76 @@
 ^+a:: ; Ctrl + Shift + A
-; --- Bắt đầu ---
-FileEncoding, UTF-8 ; Đảm bảo đọc ghi đều dùng UTF-8
+; --- Start ---
+FileEncoding, UTF-8 ; Ensure UTF-8 encoding for reading/writing
 
 url := "https://filecxx.com/en_US/activation_code.html"
 file := A_Temp "\activation_page.html"
 
-; Tải file HTML
+; Download the HTML file
 URLDownloadToFile, %url%, %file%
 
-; Kiểm tra xem file có tải thành công không
+; Check if the file was downloaded successfully
 if (ErrorLevel || !FileExist(file))
 {
-    MsgBox, Lỗi: Không thể tải trang web từ %url%.
+    MsgBox, Error: Failed to download page from %url%.
     Return
 }
 
-; Đọc nội dung HTML
+; Read the HTML content
 FileRead, htmlContent, %file%
 if (ErrorLevel || htmlContent = "")
 {
-    MsgBox, Lỗi: Không thể đọc nội dung file HTML.
+    MsgBox, Error: Failed to read HTML file content.
     Return
 }
 
-; Lấy ngày hiện tại (YYYYMMDD)
+; Get today's date (YYYYMMDD)
 FormatTime, currentDate,, yyyyMMdd
 
-; Tìm tất cả các khoảng thời gian và mã kích hoạt trong thẻ <pre>
+; Regex pattern for activation code inside <pre> section
 pattern := "(\d{4}-\d{2}-\d{2} 00:00:00 - \d{4}-\d{2}-\d{2} 00:00:00)\s*([A-Za-z0-9_-]+)"
 pos := 1
 activationCode := ""
 while (pos := RegExMatch(htmlContent, pattern, m, pos))
 {
-    ; Lấy ngày bắt đầu và kết thúc từ m1
+    ; Extract start and end dates from m1
     timeRange := m1
     RegExMatch(timeRange, "(\d{4}-\d{2}-\d{2}) 00:00:00 - (\d{4}-\d{2}-\d{2}) 00:00:00", dateMatch)
-    startDate := StrReplace(dateMatch1, "-", "") ; Ví dụ: 20250424
-    endDate := StrReplace(dateMatch2, "-", "")   ; Ví dụ: 20250501
+    startDate := StrReplace(dateMatch1, "-", "") ; e.g. 20250424
+    endDate := StrReplace(dateMatch2, "-", "")   ; e.g. 20250501
 
-    ; Kiểm tra xem ngày hiện tại có nằm trong khoảng thời gian không
+    ; Check if current date is within the range
     if (currentDate >= startDate && currentDate <= endDate)
     {
         activationCode := m2
         break
     }
-    ; Cập nhật pos để tránh vòng lặp vô tận
-    pos += StrLen(m1) + StrLen(m2) + 1 ; Di chuyển qua khoảng thời gian, mã kích hoạt và ít nhất 1 ký tự
+    ; Move past current match to avoid infinite loop
+    pos += StrLen(m1) + StrLen(m2) + 1
 }
 
-; Kiểm tra xem có tìm thấy mã kích hoạt không
+; Check if an activation code was found
 if (activationCode = "")
 {
     FileAppend, %htmlContent%, %A_Temp%\debug_html.html
-    MsgBox, Không tìm thấy mã kích hoạt cho ngày hiện tại (%currentDate%). Nội dung HTML đã được lưu vào %A_Temp%\debug_html.html để kiểm tra.
+    MsgBox, No activation code found for current date (%currentDate%). HTML content saved to %A_Temp%\debug_html.html for debugging.
     Return
 }
 
-; Gán activation code vào clipboard
+; Set activation code to clipboard
 Clipboard := activationCode
 ClipWait, 2
 if (ErrorLevel)
 {
-    MsgBox, Lỗi: Không thể sao chép mã kích hoạt vào clipboard.
+    MsgBox, Error: Failed to copy activation code to clipboard.
     Return
 }
 
-; Xóa nội dung cũ và dán activation code mới
+; Clear existing content and paste the activation code
 Send ^a
 Sleep, 100
 Send {Delete}
 Sleep, 100
 Send ^v
 
-MsgBox, Đã dán mã kích hoạt: %activationCode%
+MsgBox, Activation code pasted: %activationCode%
 Return
