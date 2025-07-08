@@ -24,7 +24,7 @@ if (ErrorLevel || htmlContent = "")
 }
 
 ; Get today's date (YYYYMMDD)
-FormatTime, currentDate,, yyyyMMdd
+FormatTime, currentDateTime,, yyyyMMddHHmmss
 
 ; Regex pattern for activation code inside <pre> section
 pattern := "(\d{4}-\d{2}-\d{2} 00:00:00 - \d{4}-\d{2}-\d{2} 00:00:00)\s*([A-Za-z0-9_-]+)"
@@ -35,11 +35,12 @@ while (pos := RegExMatch(htmlContent, pattern, m, pos))
     ; Extract start and end dates from m1
     timeRange := m1
     RegExMatch(timeRange, "(\d{4}-\d{2}-\d{2}) 00:00:00 - (\d{4}-\d{2}-\d{2}) 00:00:00", dateMatch)
-    startDate := StrReplace(dateMatch1, "-", "") ; e.g. 20250424
-    endDate := StrReplace(dateMatch2, "-", "")   ; e.g. 20250501
+    startDateTime := StrReplace(dateMatch1, "-", "") . "000000"
+    endDateTime := StrReplace(dateMatch2, "-", "") . "000000"
 
     ; Check if current date is within the range
-    if (currentDate >= startDate && currentDate <= endDate)
+    if (currentDateTime >= startDateTime && currentDateTime < endDateTime)
+
     {
         activationCode := m2
         break
